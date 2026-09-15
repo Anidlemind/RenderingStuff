@@ -3,11 +3,7 @@
 #include <algorithm>
 #include <cmath>
 
-float signedArea(const Vertex &v0, const Vertex &v1, const Vertex &v2) {
-  return (v1.x - v0.x) * (v2.y - v0.y) - (v1.y - v0.y) * (v2.x - v0.x);
-}
-
-BoundingBox boundingBox(const Vertex& v0, const Vertex& v1, const Vertex& v2){
+BoundingBox boundingBox(const Vertex2D& v0, const Vertex2D& v1, const Vertex2D& v2){
   return BoundingBox{
     .minx = static_cast<int>(std::floor(std::min({v0.x, v1.x, v2.x}))),
     .maxx = static_cast<int>(std::ceil(std::max({v0.x, v1.x, v2.x}))),
@@ -27,10 +23,14 @@ Color interpolateColor(const Color& c0, const Color& c1, const Color& c2, float 
     }
     return static_cast<uint8_t>(v + 0.5f);
   };
-  
+
   return Color{
     mix(c0.r, c1.r, c2.r, w0, w1, w2),
     mix(c0.g, c1.g, c2.g, w0, w1, w2),
     mix(c0.b, c1.b, c2.b, w0, w1, w2)
   };
+}
+
+float interpolateDepth(const Vertex2D &a, const Vertex2D &b, const Vertex2D &c, float w0, float w1, float w2) {
+  return a.depth * w0 + b.depth * w1 + c.depth * w2;
 }

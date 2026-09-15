@@ -8,6 +8,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_library(softrenderer STATIC
     src/math/math.cpp
     src/render/rasterer.cpp
+    src/render/frame_buffer.cpp
+    src/render/projection.cpp
 )
 
 target_include_directories(softrenderer PUBLIC src)
