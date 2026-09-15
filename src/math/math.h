@@ -114,3 +114,5 @@ Mat4 rotationZ(float radians);
 
 Mat4 perspective(float fovY, float aspect, float near, float far);
 Mat4 lookAt(const Vec3& eye, const Vec3& center, const Vec3& up);
+
+Vec3 transformDirection(const Mat4& m, const Vec3& v);

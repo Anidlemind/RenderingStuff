@@ -2,6 +2,7 @@
 
 #include "color.h"
 #include "vertex.h"
+#include "texture.h"
 
 #include <algorithm>
 #include <vector>
@@ -30,9 +31,16 @@ public:
 
   void clear(Color color);
 
+  void clearRange(Color color, int y_start, int y_end);
+
   void drawLine(int x0, int y0, int x1, int y1, Color color);
 
-  void drawTriangle(const Vertex2D& v0, const Vertex2D& v1, const Vertex2D& v2);
+  void drawTriangle(const Vertex2D& a, const Vertex2D& b, const Vertex2D& c,
+                    const Texture* texture = nullptr);
+
+  void drawTriangleRange(const Vertex2D& a, const Vertex2D& b, const Vertex2D& c,
+                         int y_start, int y_end,
+                         const Texture* texture = nullptr);
 
   bool savePPM(const std::string& filename) const;
 };

@@ -2,6 +2,7 @@
 
 #include <array>
 #include <vector>
+#include <string>
 
 #include "math/math.h"
 #include "render/vertex.h"
@@ -12,4 +13,6 @@ struct Scene {
   Mat4 model = Mat4::identity();
 
   static Scene makeIcosahedron();
+
+  static Scene loadFromOBJ(const std::string& path);
 };

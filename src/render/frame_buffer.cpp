@@ -40,6 +40,19 @@ void FrameBuffer::clear(Color color) {
   }
 }
 
+void FrameBuffer::clearRange(Color color, int y_start, int y_end) {
+  const uint32_t packed = packColor(color);
+  const int ys = std::max(y_start, 0);
+  const int ye = std::min(y_end, static_cast<int>(height_) - 1);
+  if (ys > ye) return;
+
+  const size_t begin = static_cast<size_t>(ys) * width_;
+  const size_t end   = static_cast<size_t>(ye + 1) * width_;
+
+  std::fill(colors_.begin() + begin, colors_.begin() + end, packed);
+  std::fill(depth_.begin() + begin, depth_.begin() + end, 1.0f);
+}
+
 void FrameBuffer::drawLine(int x0, int y0, int x1, int y1, Color color) {
   int dx = std::abs(x1 - x0);
   int sign_x = (x1 >= x0) ? 1 : -1;
@@ -67,17 +80,20 @@ void FrameBuffer::drawLine(int x0, int y0, int x1, int y1, Color color) {
   }
 }
 
-void FrameBuffer::drawTriangle(const Vertex2D& v0,
-                               const Vertex2D& v1,
-                               const Vertex2D& v2) {
-  float area = signedArea(v0.x, v0.y, v1.x, v1.y, v2.x, v2.y);
-  if (areEqual(area, 0.0f)) {
-    return;
-  }
+void FrameBuffer::drawTriangle(const Vertex2D& a, const Vertex2D& b, const Vertex2D& c,
+                               const Texture* texture) {
+  drawTriangleRange(a, b, c, 0, static_cast<int>(height_) - 1, texture);
+}
 
-  Vertex2D a = v0;
-  Vertex2D b = v1;
-  Vertex2D c = v2;
+void FrameBuffer::drawTriangleRange(const Vertex2D& v0,
+                                    const Vertex2D& v1,
+                                    const Vertex2D& v2,
+                                    int y_start, int y_end,
+                                    const Texture* texture) {
+  float area = signedArea(v0.x, v0.y, v1.x, v1.y, v2.x, v2.y);
+  if (areEqual(area, 0.0f)) return;
+
+  Vertex2D a = v0, b = v1, c = v2;
   if (area < 0.0f) {
     std::swap(a, b);
     area = -area;
@@ -85,69 +101,55 @@ void FrameBuffer::drawTriangle(const Vertex2D& v0,
 
   BoundingBox bb = boundingBox(a, b, c);
 
-  int y_min = std::max(bb.miny, 0);
-  int y_max = std::min(bb.maxy, static_cast<int>(height_) - 1);
-  int x_min = std::max(bb.minx, 0);
-  int x_max = std::min(bb.maxx, static_cast<int>(width_) - 1);
+  const int y_min = std::max(std::max(bb.miny, 0), y_start);
+  const int y_max = std::min(std::min(bb.maxy, static_cast<int>(height_) - 1), y_end);
+  const int x_min = std::max(bb.minx, 0);
+  const int x_max = std::min(bb.maxx, static_cast<int>(width_) - 1);
 
-  const float dw0_dx = -(c.y - b.y) / area;
-  const float dw0_dy =  (c.x - b.x) / area;
-  const float dw1_dx = -(a.y - c.y) / area;
-  const float dw1_dy =  (a.x - c.x) / area;
-  const float dw2_dx = -(b.y - a.y) / area;
-  const float dw2_dy =  (b.x - a.x) / area;
+  if (y_min > y_max || x_min > x_max) return;
 
-  const float px0 = x_min + 0.5f;
-  const float py0 = y_min + 0.5f;
-
-  float w0 = signedArea(b.x, b.y, c.x, c.y, px0, py0) / area;
-  float w1 = signedArea(c.x, c.y, a.x, a.y, px0, py0) / area;
-  float w2 = signedArea(a.x, a.y, b.x, b.y, px0, py0) / area;
+  const float inv_area = 1.0f / area;
 
   for (int y = y_min; y <= y_max; ++y) {
-    float wr0 = w0;
-    float wr1 = w1;
-    float wr2 = w2;
-
     for (int x = x_min; x <= x_max; ++x) {
-      if (wr0 >= 0.0f && wr1 >= 0.0f && wr2 >= 0.0f) {
-        float depth = wr0 * a.depth + wr1 * b.depth + wr2 * c.depth;
-        const size_t idx = static_cast<size_t>(y) * width_ + x;
+      const float px = x + 0.5f;
+      const float py = y + 0.5f;
 
-        if (depth < depth_[idx]) {
-          Color color = interpolateColor(a.color, b.color, c.color, wr0, wr1, wr2);
-          depth_[idx] = depth;
-          colors_[idx] = packColor(color);
-        }
+      const float E0 = signedArea(b.x, b.y, c.x, c.y, px, py);
+      const float E1 = signedArea(c.x, c.y, a.x, a.y, px, py);
+      const float E2 = signedArea(a.x, a.y, b.x, b.y, px, py);
+
+      if (E0 < 0.0f || E1 < 0.0f || E2 < 0.0f) continue;
+
+      const float w0 = E0 * inv_area;
+      const float w1 = E1 * inv_area;
+      const float w2 = E2 * inv_area;
+
+      const float depth = w0 * a.depth + w1 * b.depth + w2 * c.depth;
+      const size_t idx = static_cast<size_t>(y) * width_ + x;
+
+      if (depth >= depth_[idx]) continue;
+
+      Color color = interpolateColor(a.color, b.color, c.color, w0, w1, w2);
+
+      if (texture) {
+        // Perspective-correct UV.
+        const float inv_w = w0 * a.inv_w + w1 * b.inv_w + w2 * c.inv_w;
+        const float u = (w0 * a.uv.x * a.inv_w
+                       + w1 * b.uv.x * b.inv_w
+                       + w2 * c.uv.x * c.inv_w) / inv_w;
+        const float v = (w0 * a.uv.y * a.inv_w
+                       + w1 * b.uv.y * b.inv_w
+                       + w2 * c.uv.y * c.inv_w) / inv_w;
+
+        const Color texel = texture->sample(u, v);
+        color.r = static_cast<uint8_t>((static_cast<int>(color.r) * texel.r) / 255);
+        color.g = static_cast<uint8_t>((static_cast<int>(color.g) * texel.g) / 255);
+        color.b = static_cast<uint8_t>((static_cast<int>(color.b) * texel.b) / 255);
       }
 
-      wr0 += dw0_dx;
-      wr1 += dw1_dx;
-      wr2 += dw2_dx;
+      depth_[idx] = depth;
+      colors_[idx] = packColor(color);
     }
-
-    w0 += dw0_dy;
-    w1 += dw1_dy;
-    w2 += dw2_dy;
   }
-}
-
-bool FrameBuffer::savePPM(const std::string& filename) const {
-  std::ofstream out(filename, std::ios::binary);
-  if (!out) {
-    return false;
-  }
-
-  out << "P6\n" << width_ << ' ' << height_ << "\n255\n";
-
-  for (uint32_t p : colors_) {
-    const uint8_t r = static_cast<uint8_t>((p >> 16) & 0xFF);
-    const uint8_t g = static_cast<uint8_t>((p >> 8)  & 0xFF);
-    const uint8_t b = static_cast<uint8_t>( p        & 0xFF);
-
-    out.put(static_cast<char>(r));
-    out.put(static_cast<char>(g));
-    out.put(static_cast<char>(b));
-  }
-  return out.good();
 }

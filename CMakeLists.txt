@@ -11,6 +11,8 @@ add_library(softrenderer STATIC
     src/render/frame_buffer.cpp
     src/render/projection.cpp
     src/render/text.cpp
+    src/render/obj_loader.cpp
+    src/render/texture.cpp
     src/sdl_platform/window.cpp
     src/scene/camera.cpp
     src/scene/camera_controller.cpp
@@ -22,6 +24,7 @@ find_package(SDL2 REQUIRED)
 
 target_link_libraries(softrenderer PUBLIC SDL2::SDL2)
 
+target_include_directories(softrenderer PUBLIC src third_party)
 target_include_directories(softrenderer PUBLIC src)
 
 add_executable(renderer

@@ -330,3 +330,11 @@ Mat4 lookAt(const Vec3& eye, const Vec3& center, const Vec3& up) {
     -dot(s, eye), -dot(u, eye), dot(f, eye), 1
   };
 }
+
+Vec3 transformDirection(const Mat4& m, const Vec3& v) {
+  return {
+    m.at(0, 0) * v.x + m.at(1, 0) * v.y + m.at(2, 0) * v.z,
+    m.at(0, 1) * v.x + m.at(1, 1) * v.y + m.at(2, 1) * v.z,
+    m.at(0, 2) * v.x + m.at(1, 2) * v.y + m.at(2, 2) * v.z
+  };
+}

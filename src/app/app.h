@@ -1,8 +1,9 @@
 #pragma once
 
 #include <cstdint>
-#include <vector>
 
+#include "app/thread_pool.h"
+#include "render/texture.h"
 #include "sdl_platform/window.h"
 #include "render/frame_buffer.h"
 #include "scene/camera.h"
@@ -28,7 +29,9 @@ private:
   CameraController cameraController_;
   Scene            scene_;
 
-  std::vector<uint32_t> pixelBuffer_;
+  ThreadPool pool_;
+
+  Texture texture_;
 
   uint64_t lastTime_ = 0;
 

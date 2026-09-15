@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vertex.h"
+#include "render/vertex.h"
 #include "math/math.h"
 
 bool project(const Vertex3D& v,
@@ -8,3 +8,10 @@ bool project(const Vertex3D& v,
              int width,
              int height,
              Vertex2D& out);
+
+bool projectFromClip(const Vec4& clip,
+                     const Vec2& uv,
+                     Color color,
+                     int width,
+                     int height,
+                     Vertex2D& out);
