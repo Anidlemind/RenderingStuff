@@ -6,11 +6,17 @@
 #include <cmath>
 #include <fstream>
 
+inline uint32_t packColor(Color c) {
+  return (static_cast<uint32_t>(c.r) << 16)
+       | (static_cast<uint32_t>(c.g) << 8)
+       |  static_cast<uint32_t>(c.b);
+}
+
 void FrameBuffer::setPixel(int x, int y, Color color) {
   if (x < 0 || y < 0 || x >= static_cast<int>(width_) || y >= static_cast<int>(height_)) {
     return;
   }
-  colors_[static_cast<size_t>(y) * width_ + x] = color;
+  colors_[static_cast<size_t>(y) * width_ + x] = packColor(color);
 }
 
 void FrameBuffer::blendPixel(int x, int y, float depth, Color color) {
@@ -20,13 +26,18 @@ void FrameBuffer::blendPixel(int x, int y, float depth, Color color) {
   size_t idx = static_cast<size_t>(y) * width_ + x;
   if (depth < depth_[idx]) {
     depth_[idx] = depth;
-    colors_[idx] = color;
+    colors_[idx] = packColor(color);
   }
 }
 
 void FrameBuffer::clear(Color color) {
-  std::fill(colors_.begin(), colors_.end(), color);
-  std::fill(depth_.begin(), depth_.end(), 1.0f);
+  const uint32_t packed = packColor(color);
+  const size_t n = colors_.size();
+
+  for (size_t i = 0; i < n; ++i) {
+    colors_[i] = packed;
+    depth_[i]  = 1.0f;
+  }
 }
 
 void FrameBuffer::drawLine(int x0, int y0, int x1, int y1, Color color) {
@@ -79,21 +90,45 @@ void FrameBuffer::drawTriangle(const Vertex2D& v0,
   int x_min = std::max(bb.minx, 0);
   int x_max = std::min(bb.maxx, static_cast<int>(width_) - 1);
 
+  const float dw0_dx = -(c.y - b.y) / area;
+  const float dw0_dy =  (c.x - b.x) / area;
+  const float dw1_dx = -(a.y - c.y) / area;
+  const float dw1_dy =  (a.x - c.x) / area;
+  const float dw2_dx = -(b.y - a.y) / area;
+  const float dw2_dy =  (b.x - a.x) / area;
+
+  const float px0 = x_min + 0.5f;
+  const float py0 = y_min + 0.5f;
+
+  float w0 = signedArea(b.x, b.y, c.x, c.y, px0, py0) / area;
+  float w1 = signedArea(c.x, c.y, a.x, a.y, px0, py0) / area;
+  float w2 = signedArea(a.x, a.y, b.x, b.y, px0, py0) / area;
+
   for (int y = y_min; y <= y_max; ++y) {
+    float wr0 = w0;
+    float wr1 = w1;
+    float wr2 = w2;
+
     for (int x = x_min; x <= x_max; ++x) {
-      float px = x + 0.5f;
-      float py = y + 0.5f;
+      if (wr0 >= 0.0f && wr1 >= 0.0f && wr2 >= 0.0f) {
+        float depth = wr0 * a.depth + wr1 * b.depth + wr2 * c.depth;
+        const size_t idx = static_cast<size_t>(y) * width_ + x;
 
-      float w0 = signedArea(b.x, b.y, c.x, c.y, px, py) / area;
-      float w1 = signedArea(c.x, c.y, a.x, a.y, px, py) / area;
-      float w2 = signedArea(a.x, a.y, b.x, b.y, px, py) / area;
-
-      if (w0 >= 0.0f && w1 >= 0.0f && w2 >= 0.0f) {
-        float depth = w0 * a.depth + w1 * b.depth + w2 * c.depth;
-        Color color = interpolateColor(a.color, b.color, c.color, w0, w1, w2);
-        blendPixel(x, y, depth, color);
+        if (depth < depth_[idx]) {
+          Color color = interpolateColor(a.color, b.color, c.color, wr0, wr1, wr2);
+          depth_[idx] = depth;
+          colors_[idx] = packColor(color);
+        }
       }
+
+      wr0 += dw0_dx;
+      wr1 += dw1_dx;
+      wr2 += dw2_dx;
     }
+
+    w0 += dw0_dy;
+    w1 += dw1_dy;
+    w2 += dw2_dy;
   }
 }
 
@@ -105,10 +140,14 @@ bool FrameBuffer::savePPM(const std::string& filename) const {
 
   out << "P6\n" << width_ << ' ' << height_ << "\n255\n";
 
-  for (const Color& color : colors_) {
-    out.put(static_cast<char>(color.r));
-    out.put(static_cast<char>(color.g));
-    out.put(static_cast<char>(color.b));
+  for (uint32_t p : colors_) {
+    const uint8_t r = static_cast<uint8_t>((p >> 16) & 0xFF);
+    const uint8_t g = static_cast<uint8_t>((p >> 8)  & 0xFF);
+    const uint8_t b = static_cast<uint8_t>( p        & 0xFF);
+
+    out.put(static_cast<char>(r));
+    out.put(static_cast<char>(g));
+    out.put(static_cast<char>(b));
   }
   return out.good();
 }

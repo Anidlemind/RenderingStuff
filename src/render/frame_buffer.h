@@ -12,7 +12,7 @@ private:
   uint32_t width_ = 0;
   uint32_t height_ = 0;
 
-  std::vector<Color> colors_;
+  std::vector<uint32_t> colors_;
   std::vector<float> depth_;
 
 public:
@@ -21,6 +21,8 @@ public:
       height_(h),
       colors_(width_ * height_),
       depth_(width_ * height_, 1.0f) {}
+
+  const uint32_t* pixels() const { return colors_.data(); }
 
   void setPixel(int x, int y, Color color);
 

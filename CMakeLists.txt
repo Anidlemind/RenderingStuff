@@ -10,12 +10,22 @@ add_library(softrenderer STATIC
     src/render/rasterer.cpp
     src/render/frame_buffer.cpp
     src/render/projection.cpp
+    src/render/text.cpp
+    src/sdl_platform/window.cpp
+    src/scene/camera.cpp
+    src/scene/camera_controller.cpp
+    src/scene/scene.cpp
+    src/app/app.cpp
 )
+
+find_package(SDL2 REQUIRED)
+
+target_link_libraries(softrenderer PUBLIC SDL2::SDL2)
 
 target_include_directories(softrenderer PUBLIC src)
 
 add_executable(renderer
-    src/scene/main.cpp
+    src/main.cpp
 )
 target_link_libraries(renderer PRIVATE softrenderer)
 
