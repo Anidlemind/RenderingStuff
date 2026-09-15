@@ -7,12 +7,12 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_library(softrenderer STATIC
     src/math/math.cpp
-    src/render/rasterer.cpp
+    src/render/rasterizer.cpp
     src/render/frame_buffer.cpp
     src/render/projection.cpp
-    src/render/text.cpp
-    src/render/obj_loader.cpp
-    src/render/texture.cpp
+    src/ui/text.cpp
+    src/assets/obj_loader.cpp
+    src/assets/texture.cpp
     src/sdl_platform/window.cpp
     src/scene/camera.cpp
     src/scene/camera_controller.cpp

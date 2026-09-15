@@ -1,4 +1,4 @@
-#include "render/obj_loader.h"
+#include "obj_loader.h"
 
 #include <algorithm>
 #include <cstdio>

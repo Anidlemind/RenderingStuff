@@ -2,7 +2,7 @@
 
 #include "color.h"
 #include "vertex.h"
-#include "texture.h"
+#include "assets/texture.h"
 
 #include <algorithm>
 #include <vector>

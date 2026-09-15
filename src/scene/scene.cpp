@@ -1,5 +1,5 @@
 #include "scene/scene.h"
-#include "render/obj_loader.h"
+#include "assets/obj_loader.h"
 #include "math/math.h"
 
 #include <algorithm>

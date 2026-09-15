@@ -1,6 +1,6 @@
 #include "math/math.h"
 #include "frame_buffer.h"
-#include "render/rasterer.h"
+#include "rasterizer.h"
 
 #include <algorithm>
 #include <cmath>

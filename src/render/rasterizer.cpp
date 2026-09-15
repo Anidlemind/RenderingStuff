@@ -1,4 +1,4 @@
-#include "rasterer.h"
+#include "rasterizer.h"
 
 #include <algorithm>
 #include <cmath>

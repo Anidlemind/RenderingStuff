@@ -2,8 +2,8 @@
 
 #include <cstdint>
 
-#include "app/thread_pool.h"
-#include "render/texture.h"
+#include "core/thread_pool.h"
+#include "assets/texture.h"
 #include "sdl_platform/window.h"
 #include "render/frame_buffer.h"
 #include "scene/camera.h"

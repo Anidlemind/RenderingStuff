@@ -11,7 +11,7 @@
 
 #include "math/math.h"
 #include "render/projection.h"
-#include "render/text.h"
+#include "ui/text.h"
 
 namespace {
   constexpr int kWidth  = 1920;
