@@ -11,8 +11,8 @@
 #include "render/text.h"
 
 namespace {
-  constexpr int kWidth  = 1280;
-  constexpr int kHeight = 720;
+  constexpr int kWidth  = 800;
+  constexpr int kHeight = 600;
 
   constexpr Vec3 kLightDir{0.5f, 1.0f, 0.5f};
 
@@ -72,11 +72,7 @@ void App::update(float dt) {
 }
 
 void App::render() {
-  using clock = std::chrono::steady_clock;
-
-  auto t0 = clock::now();
   framebuffer_.clear({20, 20, 30});
-  auto t1 = clock::now();
 
   const float aspect = static_cast<float>(kWidth) / static_cast<float>(kHeight);
 
@@ -84,7 +80,6 @@ void App::render() {
 
   const Vec3 lightDir = normalize(kLightDir);
 
-  auto t2 = clock::now();
   for (const auto& tri : scene_.tris) {
     const Vertex3D& v0 = scene_.verts[tri[0]];
     const Vertex3D& v1 = scene_.verts[tri[1]];
@@ -139,17 +134,6 @@ void App::render() {
     drawText(framebuffer_, 11, 11, buf, {0, 0, 0});
     drawText(framebuffer_, 10, 10, buf, {255, 255, 255});
   }
-
-  auto t3 = clock::now();
-
-
-  auto t4 = clock::now();
-
-  auto ms = [](auto a, auto b) {
-    return std::chrono::duration<float, std::milli>(b - a).count();
-  };
-
-  std::fprintf(stderr, "clear %.2f tris %.2f pack %.2f", ms(t0, t1), ms(t2, t3), ms(t3, t4));
 
   window_.present(framebuffer_.pixels(), kWidth, kHeight);
 }
