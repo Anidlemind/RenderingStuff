@@ -1,14 +1,13 @@
-#pragma once
+#ifndef RENDERER_SRC_ASSETS_OBJ_LOADER_H_
+#define RENDERER_SRC_ASSETS_OBJ_LOADER_H_
 
-#include <array>
+#include <iosfwd>
 #include <string>
-#include <vector>
 
-#include "render/vertex.h"
+#include "scene/mesh.h"
 
-struct ObjMesh {
-  std::vector<Vertex3D> verts;
-  std::vector<std::array<int, 3>> tris;
-};
+Mesh LoadObj(const std::string& path);
+// Malformed geometry throws std::runtime_error with a line number.
+Mesh LoadObj(std::istream& input);
 
-ObjMesh loadOBJ(const std::string& path);
+#endif  // RENDERER_SRC_ASSETS_OBJ_LOADER_H_

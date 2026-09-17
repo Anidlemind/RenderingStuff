@@ -1,34 +1,42 @@
-#pragma once
+#ifndef RENDERER_SRC_CORE_THREAD_POOL_H_
+#define RENDERER_SRC_CORE_THREAD_POOL_H_
 
 #include <condition_variable>
+#include <exception>
 #include <functional>
 #include <mutex>
 #include <queue>
+#include <stdexcept>
 #include <thread>
+#include <utility>
 #include <vector>
 
 class ThreadPool {
-public:
-  explicit ThreadPool(int numThreads) {
-    workers_.reserve(numThreads);
-    for (int i = 0; i < numThreads; ++i) {
-      workers_.emplace_back([this] { workerLoop(); });
+ public:
+  explicit ThreadPool(int num_threads) {
+    if (num_threads <= 0) {
+      throw std::invalid_argument("ThreadPool requires at least one worker");
+    }
+    workers_.reserve(num_threads);
+    try {
+      for (int i = 0; i < num_threads; ++i) {
+        workers_.emplace_back([this] { WorkerLoop(); });
+      }
+    } catch (...) {
+      Shutdown();
+      throw;
     }
   }
 
-  ~ThreadPool() {
-    {
-      std::lock_guard<std::mutex> lock(mutex_);
-      stop_ = true;
-    }
-    cv_.notify_all();
-    for (auto& w : workers_) w.join();
-  }
+  ~ThreadPool() { Shutdown(); }
 
   ThreadPool(const ThreadPool&) = delete;
   ThreadPool& operator=(const ThreadPool&) = delete;
 
-  void submit(std::function<void()> task) {
+  void Submit(std::function<void()> task) {
+    if (!task) {
+      throw std::invalid_argument("Cannot submit an empty task");
+    }
     {
       std::lock_guard<std::mutex> lock(mutex_);
       tasks_.push(std::move(task));
@@ -37,26 +45,51 @@ public:
     cv_.notify_one();
   }
 
-  void wait() {
+  void Wait() {
     std::unique_lock<std::mutex> lock(mutex_);
     done_cv_.wait(lock, [this] { return pending_ == 0; });
+    auto failure = std::exchange(error_, nullptr);
+    lock.unlock();
+    if (failure) {
+      std::rethrow_exception(failure);
+    }
   }
 
-  int size() const { return static_cast<int>(workers_.size()); }
+  int Size() const { return static_cast<int>(workers_.size()); }
 
-private:
-  void workerLoop() {
+ private:
+  void Shutdown() noexcept {
+    {
+      std::lock_guard lock(mutex_);
+      stop_ = true;
+    }
+    cv_.notify_all();
+    for (auto& worker : workers_) {
+      worker.join();
+    }
+  }
+
+  void WorkerLoop() {
     while (true) {
       std::function<void()> task;
       {
         std::unique_lock<std::mutex> lock(mutex_);
         cv_.wait(lock, [this] { return stop_ || !tasks_.empty(); });
-        if (stop_ && tasks_.empty()) return;
+        if (stop_ && tasks_.empty()) {
+          return;
+        }
         task = std::move(tasks_.front());
         tasks_.pop();
       }
 
-      task();
+      try {
+        task();
+      } catch (...) {
+        std::lock_guard lock(mutex_);
+        if (!error_) {
+          error_ = std::current_exception();
+        }
+      }
 
       {
         std::lock_guard<std::mutex> lock(mutex_);
@@ -72,6 +105,9 @@ private:
   std::mutex mutex_;
   std::condition_variable cv_;
   std::condition_variable done_cv_;
-  int pending_ = 0;
+  size_t pending_ = 0;
+  std::exception_ptr error_;
   bool stop_ = false;
 };
+
+#endif  // RENDERER_SRC_CORE_THREAD_POOL_H_

@@ -1,17 +1,13 @@
-#pragma once
+#ifndef RENDERER_SRC_RENDER_PROJECTION_H_
+#define RENDERER_SRC_RENDER_PROJECTION_H_
 
-#include "render/vertex.h"
 #include "math/math.h"
+#include "render/vertex.h"
 
-bool project(const Vertex3D& v,
-             const Mat4& mvp,
-             int width,
-             int height,
+bool Project(const Vertex3D& v, const Mat4& mvp, int width, int height,
              Vertex2D& out);
 
-bool projectFromClip(const Vec4& clip,
-                     const Vec2& uv,
-                     Color color,
-                     int width,
-                     int height,
-                     Vertex2D& out);
+bool ProjectFromClip(const Vec4& clip, const Vec2& uv, Color color, int width,
+                     int height, Vertex2D& out);
+
+#endif  // RENDERER_SRC_RENDER_PROJECTION_H_

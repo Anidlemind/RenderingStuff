@@ -1,0 +1,6 @@
+# Neutral material for the bundled OBJ's existing mat0 reference.
+newmtl mat0
+Kd 1 1 1
+Ks 0.05126946 0.05126946 0.05126946
+Ns 64
+map_Kd Shrimp_texture.png

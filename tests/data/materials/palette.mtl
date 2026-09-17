@@ -1,0 +1,9 @@
+newmtl red
+Kd 1 0 0
+Ks 0 0 0
+Ns 0
+newmtl textured
+Kd 0.5 1 0.5
+Ks 0.25 0.25 0.25
+Ns 80
+map_Kd ../../../assets/Shrimp_texture.png

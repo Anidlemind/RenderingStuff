@@ -1,8 +1,11 @@
-#pragma once
+#ifndef RENDERER_SRC_RENDER_BOUNDING_BOX_H_
+#define RENDERER_SRC_RENDER_BOUNDING_BOX_H_
 
 struct BoundingBox {
-  int minx;
-  int maxx;
-  int miny;
-  int maxy;
+  int min_x;
+  int max_x;
+  int min_y;
+  int max_y;
 };
+
+#endif  // RENDERER_SRC_RENDER_BOUNDING_BOX_H_

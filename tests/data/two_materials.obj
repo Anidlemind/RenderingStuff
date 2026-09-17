@@ -1,0 +1,10 @@
+mtllib materials/palette.mtl
+v -1 -1 0
+v 0 -1 0
+v -0.5 1 0
+v 1 -1 0
+v 0.5 1 0
+usemtl red
+f 1 2 3
+usemtl textured
+f 2 4 5

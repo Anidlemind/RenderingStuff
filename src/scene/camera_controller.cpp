@@ -4,44 +4,56 @@
 #include <cmath>
 
 namespace {
-  constexpr float kPitchLimit = 1.5533430f;
-  constexpr int   kMaxMouseDelta = 200;
-}
+constexpr float kPitchLimit = 1.5533430f;
+constexpr int kMaxMouseDelta = 200;
+}  // namespace
 
-void CameraController::update(Camera& camera, const InputState& input, float dt) const {
+void CameraController::Update(Camera& camera, const InputState& input,
+                              float dt) const {
+  if (input.rmb_down) {
+    const int dx = std::clamp(input.mouse_dx, -kMaxMouseDelta, kMaxMouseDelta);
+    const int dy = std::clamp(input.mouse_dy, -kMaxMouseDelta, kMaxMouseDelta);
 
-  if (input.rmbDown) {
-    const int dx = std::clamp(input.mouseDX, -kMaxMouseDelta, kMaxMouseDelta);
-    const int dy = std::clamp(input.mouseDY, -kMaxMouseDelta, kMaxMouseDelta);
-
-    camera.yaw   += static_cast<float>(dx) * mouseSensitivity;
-    camera.pitch -= static_cast<float>(dy) * mouseSensitivity;
+    camera.yaw += static_cast<float>(dx) * mouse_sensitivity;
+    camera.pitch -= static_cast<float>(dy) * mouse_sensitivity;
 
     camera.pitch = std::clamp(camera.pitch, -kPitchLimit, kPitchLimit);
   }
 
-  const Vec3 f = camera.forward();
-  const Vec3 r = camera.right();
-  const Vec3 u = camera.up();
+  const Vec3 f = camera.Forward();
+  const Vec3 r = camera.Right();
+  const Vec3 u = camera.Up();
 
-  Vec3 moveDir{0.0f, 0.0f, 0.0f};
+  Vec3 move_dir{0.0f, 0.0f, 0.0f};
 
-  if (input.forward)  moveDir += f;
-  if (input.backward) moveDir -= f;
-  if (input.right)    moveDir += r;
-  if (input.left)     moveDir -= r;
-  if (input.up)       moveDir += u;
-  if (input.down)     moveDir -= u;
+  if (input.forward) {
+    move_dir += f;
+  }
+  if (input.backward) {
+    move_dir -= f;
+  }
+  if (input.right) {
+    move_dir += r;
+  }
+  if (input.left) {
+    move_dir -= r;
+  }
+  if (input.up) {
+    move_dir += u;
+  }
+  if (input.down) {
+    move_dir -= u;
+  }
 
-  const float len = moveDir.length();
+  const float len = move_dir.Length();
   if (len > 1e-6f) {
-    moveDir /= len;
+    move_dir /= len;
 
-    float speed = moveSpeed;
+    float speed = move_speed;
     if (input.sprint) {
-      speed *= sprintMultiplier;
+      speed *= sprint_multiplier;
     }
 
-    camera.position += moveDir * speed * dt;
+    camera.position += move_dir * speed * dt;
   }
 }
