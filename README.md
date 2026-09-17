@@ -1,15 +1,11 @@
 # Software renderer
 
-A little C++ project for playing with 3D graphics. The CPU draws the scene,
-and SDL2 puts it in a window. Fly around, move a few shapes, play with shadows,
-or open your own model.
+A toy C++ project for playing with 3D graphics. The CPU draws the scene,
+and SDL2 puts it in a window.
 
 ![A cube, a sphere, and a pyramid on a plane](assets/primitives.png)
 
-## Try it
-
-You'll need a C++23 compiler, CMake, and SDL2 development files
-(`libsdl2-dev` on Debian/Ubuntu).
+## Running
 
 From the project folder:
 
@@ -18,7 +14,7 @@ From the project folder:
 ```
 
 The script builds the project and opens a scene with a cube, a sphere, and a
-pyramid. It uses an optimized Release build by default. Plain `./run.sh` works
+pyramid. Plain `./run.sh` works
 too; the options above pick 720p and turn on shadows.
 
 The shrimp has its own scene:
