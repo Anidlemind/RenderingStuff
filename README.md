@@ -52,8 +52,8 @@ which object is selected.
 ## More to play with
 
 - [Scenes and your own models](docs/scenes.md)
-- [Lights, textures, and smoother edges](docs/shading-quality.md)
-- [If it feels slow](docs/primitives-performance.md)
-- [Tinkering with the code](docs/code-style.md)
+- [Lights, textures, and smoother edges](docs/shading.md)
+- [Performance](docs/performance.md)
+- [Сode](docs/code.md)
 
 For all command-line options, run `./run.sh --help`.
